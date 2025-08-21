@@ -85,3 +85,6 @@ downloads/
 # Temporary files
 *.tmp
 *.temp
+
+PDS*/
+./*.log

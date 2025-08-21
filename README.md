@@ -1,277 +1,233 @@
-# 🎓 Moodle Assignment Automation Tool
+# 🎓 Moodle Submission Downloader
 
-An advanced Python automation tool for efficiently downloading student submissions from Moodle quiz reports. This tool automatically handles login, CAPTCHA solving, navigation, and bulk downloading of student assignments with intelligent organization.
+An advanced Python automation tool for efficiently downloading student assignments from Moodle. This tool is specifically tailored for `mod/assign` (Assignment) and `mod/quiz` (Quiz) submissions, handling login, navigation, and bulk downloading with intelligent organization.
 
 ## ✨ Features
 
 ### 🔐 **Smart Authentication**
-- **Automatic CAPTCHA Solving**: Uses OCR (pytesseract) to solve CAPTCHAs automatically
-- **Retry Logic**: 3-attempt retry system with fallback to manual solving
-- **Session Management**: Maintains login session across multiple operations
 
-### 📊 **Intelligent Processing** 
-- **Multi-URL Support**: Process multiple submission URLs in sequence
-- **Dynamic Question Detection**: Automatically detects and maps question columns (Q.1, Q.2, etc.)
-- **Selective Question Processing**: Choose specific questions or process all available
-- **Smart Link Detection**: Handles both "Requires grading" and graded submissions
+  - **Automatic CAPTCHA Solving**: Uses OCR (pytesseract) to automatically solve CAPTCHAs during login.
+  - **Retry Logic**: 3-attempt retry system with fallback to manual solving.
+  - **Session Management**: Maintains the login session across multiple operations.
+
+### 📊 **Intelligent Processing**
+
+  - **Multi-URL Support**: Processes multiple submission URLs in a sequence, allowing for bulk downloads from different quizzes or pages.
+  - **Dynamic File Detection**: Specifically targets and downloads `.c` files for code assignments.
+  - **Error Recovery**: Continues processing even if individual items fail.
 
 ### 📁 **Advanced File Organization**
-- **Student-Specific Folders**: Creates organized folders for each student
-- **Question-Specific Files**: Files are tagged with question numbers
-- **Dual Content Extraction**: Downloads both text answers and file attachments
-- **UTF-8 Support**: Proper encoding for international characters
+
+  - **Student-Specific Folders**: Creates organized folders for each student using their roll number.
+  - **File Naming**: Downloaded files are saved with the student's roll number and original filename to prevent duplicates.
+  - **UTF-8 Support**: Ensures proper encoding.
 
 ### 🚀 **Performance & Reliability**
-- **Timeout Protection**: 5-second timeouts prevent hanging
-- **Error Recovery**: Continues processing even if individual items fail
-- **Progress Tracking**: Detailed logging and progress reporting
-- **Browser Control**: Visible browser for debugging and monitoring
+
+  - **Progress Tracking**: Detailed logging to both the console and a `submissions.log` file.
+  - **Browser Control**: Visible browser for debugging and monitoring (`headless=False`).
+  - **Timeout Protection**: Timeouts prevent the script from hanging on unresponsive elements.
+
+-----
 
 ## 🛠️ Installation
 
 ### Prerequisites
-- Python 3.7+
-- Tesseract OCR engine
-- Chrome/Chromium browser
 
-### 1. Install Python Dependencies
+  - Python 3.7+
+  - Tesseract OCR engine
+  - Chrome/Chromium browser
+
+### 1\. Install Python Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Install Tesseract OCR
+The required packages are:
+
+  - `playwright==1.40.0`
+  - `pytesseract==0.3.10`
+  - `Pillow==10.1.0`
+
+### 2\. Install Tesseract OCR
 
 **macOS:**
+
 ```bash
 brew install tesseract
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt-get install tesseract-ocr
 ```
 
 **Windows:**
-Download from: https://github.com/tesseract-ocr/tesseract
+Download from: [https://github.com/tesseract-ocr/tesseract](https://github.com/tesseract-ocr/tesseract)
 
-### 3. Install Playwright Browsers
+### 3\. Install Playwright Browsers
+
 ```bash
 playwright install chromium
 ```
+
+-----
 
 ## ⚙️ Configuration
 
 Edit the configuration section in `main.py`:
 
 ### Basic Configuration
+
 ```python
 # --- Configuration ---
 USERNAME = "your_username"
 PASSWORD = "your_password"
-DOWNLOAD_DIRECTORY = "Moodle_Assignments_Playwright"
+DOWNLOAD_DIRECTORY = "Assignments"  # This will be your download folder
 ```
 
 ### Submission URLs
-Add all the URLs you want to process:
+
+Add all the URLs you want to process. The script is configured to work with Moodle's `mod/assign` (`.../view.php?id=...&action=grading`) pages.
+
 ```python
 SUBMISSION_URLS = [
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview",
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview&page=1",
+    "https://moodle.example.edu/mod/assign/view.php?id=123&action=grading",
+    "https://moodle.example.edu/mod/assign/view.php?id=456&action=grading",
     # Add more URLs as needed
 ]
 ```
 
-### Question Selection
-```python
-# Process all questions
-QUESTIONS_TO_PROCESS = "all"
-
-# Process specific questions only
-QUESTIONS_TO_PROCESS = [1, 2]  # Only Q.1 and Q.2
-
-# Process single question
-QUESTIONS_TO_PROCESS = [1]  # Only Q.1
-```
+-----
 
 ## 🚀 Usage
 
 ### Basic Usage
+
 ```bash
 python main.py
 ```
 
 ### Expected Output
-```
-Attempting to solve CAPTCHA automatically...
-CAPTCHA attempt 1/3...
-OCR extracted CAPTCHA text: 'ABC123'
-Login successful with OCR on attempt 1!
 
-Processing 2 submission URLs...
+The script logs its progress to both the console and a `submissions.log` file.
+
+```
+[2025-08-21 12:53:20] INFO: Attempting to solve CAPTCHA automatically...
+[2025-08-21 12:53:20] INFO: CAPTCHA attempt 1/3...
+[2025-08-21 12:53:20] INFO: OCR extracted CAPTCHA text: 'ABC123'
+[2025-08-21 12:53:22] INFO: Login successful with OCR on attempt 1!
+
+[2025-08-21 12:53:22] INFO: Processing 2 submission URLs...
 
 --- Processing Submission URL 1/2 ---
-URL: https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview
+URL: https://moodle.example.edu/mod/assign/view.php?id=123&action=grading
+[2025-08-21 12:53:23] INFO: Successfully navigated to submission URL 1
+[2025-08-21 12:53:23] INFO: Processing page 1...
+[2025-08-21 12:53:23] INFO: Processing student: 2024CS001
+[2025-08-21 12:53:23] INFO: Downloaded: 2024CS001_assignment_1.c
+[2025-08-21 12:53:24] INFO: Processing student: 2024CS002
+[2025-08-21 12:53:24] INFO: Downloaded: 2024CS002_code_1.c
 
-=== QUESTION COLUMN MAPPING ===
-  Mapped Q.1 to column 11
-  Mapped Q.2 to column 12
-Available questions: [1, 2]
-Questions to process: [1, 2]
-=== END QUESTION MAPPING ===
-
-Found 30 student submissions at URL 1.
-
-Processing student: 22CH30041
-  Processing Question 1 (column 11)...
-    Found link: 'Requires grading'
-    -> Saved text answer to '22CH30041_Q1_answer.txt'
-    -> Downloaded 'assignment_Q1.pdf' for Q.1
-    
 --- Automation Complete ---
-Total students processed: 30
 URLs processed: 2
 ```
 
+-----
+
 ## 📁 File Structure
 
-The tool creates an organized directory structure:
+The tool creates an organized directory structure. For each student, a folder is created containing their submissions. The current version is configured to download only `.c` files.
 
 ```
-Moodle_Assignments_Playwright/
-├── 22CH30041/
-│   ├── 22CH30041_Q1_answer.txt     # Text answer for Question 1
-│   ├── assignment_Q1.pdf           # File attachment for Question 1
-│   ├── 22CH30041_Q2_answer.txt     # Text answer for Question 2
-│   └── homework_Q2.zip             # File attachment for Question 2
-├── 23MT10017/
-│   ├── 23MT10017_Q1_answer.txt
-│   ├── code_Q1.cpp
-│   └── 23MT10017_Q2_answer.txt
-└── 24CH10056/
-    ├── 24CH10056_Q1_answer.txt
-    └── solution_Q1.py
+Assignments/
+├── 2024CS001/
+│   └── 2024CS001_assignment_1.c  # Example .c file
+├── 2024CS002/
+│   └── 2024CS002_code_1.c
+└── 2024CS003/
+    └── 2024CS003_solution_1.c
 ```
+
+-----
 
 ## 🎯 Use Cases
 
-### 1. **Multiple Quiz Pages**
-Process different pages of the same quiz:
+### 1\. **Batch Downloading Multiple Assignments**
+
+Process multiple different assignment pages by listing them in `SUBMISSION_URLS`.
+
 ```python
 SUBMISSION_URLS = [
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview&page=0",
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview&page=1",
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview&page=2",
+    "https://moodle.example.edu/mod/assign/view.php?id=123&action=grading",  # Assignment 1
+    "https://moodle.example.edu/mod/assign/view.php?id=456&action=grading",  # Assignment 2
 ]
 ```
 
-### 2. **Different Quizzes**
-Process multiple different quizzes:
-```python
-SUBMISSION_URLS = [
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview",  # Quiz 1
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1509&mode=overview",  # Quiz 2
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1520&mode=overview",  # Quiz 3
-]
-```
+### 2\. **Downloading from Paginated Pages**
 
-### 3. **Filtered Results**
-Process with specific filters (graded only, specific attempts, etc.):
-```python
-SUBMISSION_URLS = [
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/quiz/report.php?id=1470&mode=overview&attempts=enrolled_with&onlygraded&onlyregraded",
-]
-```
+The script now automatically handles pagination by clicking the "next page" button (`»`) until all pages are processed. You only need to provide the first URL.
 
-### 4. **Selective Question Processing**
-Process only specific questions for grading efficiency:
-```python
-# Only process Questions 1 and 3 (skip Q.2)
-QUESTIONS_TO_PROCESS = [1, 3]
-```
+### 3\. **Downloading Specific File Types**
 
-## 🔧 Advanced Features
+The `process_page` function is hardcoded to only download files ending with `.c`. This can be easily modified to download other file types.
 
-### CAPTCHA Handling
-- **Automatic OCR**: Uses Tesseract with optimized settings for CAPTCHA recognition
-- **Character Whitelisting**: Restricts to alphanumeric characters for better accuracy
-- **Retry Logic**: 3 attempts with page refresh between failures
-- **Manual Fallback**: Falls back to manual solving if OCR fails
-
-### Question Detection
-- **Dynamic Mapping**: Automatically detects question columns using regex pattern `Q.\s*(\d+)`
-- **Flexible Layout**: Adapts to different Moodle table structures
-- **Column Indexing**: Maps question numbers to actual column positions
-
-### File Handling
-- **Smart Naming**: Automatically adds question numbers to filenames
-- **Duplicate Prevention**: Handles multiple files for the same question
-- **Extension Preservation**: Maintains original file extensions
-- **UTF-8 Encoding**: Proper text file encoding for international content
+-----
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
 **CAPTCHA Recognition Fails:**
-- Ensure Tesseract is properly installed
-- Check image quality and contrast
-- Use manual fallback when OCR fails consistently
+
+  - Ensure Tesseract is properly installed and its executable is in your system's PATH.
+  - The script has a retry logic, but if all attempts fail, you'll need to solve it manually in the browser.
 
 **Login Issues:**
-- Verify username and password are correct
-- Check for account lockouts or security restrictions
-- Ensure network connectivity to Moodle server
+
+  - Verify your `USERNAME` and `PASSWORD` in the `main.py` file are correct.
+  - Check for account lockouts or security restrictions on your Moodle account.
 
 **Download Failures:**
-- Check Moodle URL accessibility
-- Verify question URLs are valid
-- Ensure sufficient disk space
 
-**Navigation Errors:**
-- Update submission URLs if Moodle structure changes
-- Check for pagination or filter changes
-- Verify table structure hasn't changed
+  - Ensure you have sufficient disk space in the `DOWNLOAD_DIRECTORY`.
+  - Verify the Moodle URLs in `SUBMISSION_URLS` are correct and accessible.
 
 ### Debug Mode
+
 The browser runs in visible mode (`headless=False`) for easy debugging. You can:
-- Watch the automation process in real-time
-- Manually intervene if needed
-- Debug CAPTCHA or navigation issues
 
-## 📋 Requirements
+  - Watch the automation process in real-time.
+  - Manually intervene if needed during a login or navigation error.
+  - Debug CAPTCHA or navigation issues visually.
 
-```txt
-playwright==1.40.0
-pytesseract==0.3.10
-Pillow==10.1.0
-```
+-----
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1.  Fork the repository
+2.  Create a feature branch (`git checkout -b feature/amazing-feature`)
+3.  Commit your changes (`git commit -m 'Add amazing feature'`)
+4.  Push to the branch (`git push origin feature/amazing-feature`)
+5.  Open a Pull Request
 
 ## ⚠️ Disclaimer
 
 This tool is for educational purposes and legitimate academic use only. Users are responsible for:
-- Complying with their institution's terms of service
-- Respecting rate limits and server resources
-- Ensuring proper authorization for data access
-- Following academic integrity guidelines
+
+  - Complying with their institution's terms of service.
+  - Respecting rate limits and server resources.
+  - Ensuring proper authorization for data access.
+  - Following academic integrity guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the `LICENSE` file for details.
 
 ## 🙏 Acknowledgments
 
-- **Playwright** - For reliable browser automation
-- **Tesseract OCR** - For CAPTCHA text recognition
-- **PIL/Pillow** - For image processing capabilities
-
----
-
-**Note**: Always test with a small subset of data first and ensure you have proper permissions before running bulk operations on institutional systems.
+  - **Playwright** - For reliable browser automation.
+  - **Tesseract OCR** - For CAPTCHA text recognition.
+  - **PIL/Pillow** - For image processing capabilities.
