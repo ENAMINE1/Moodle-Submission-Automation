@@ -1,6 +1,7 @@
 import os
 import logging
 from SRC.generate_prompt import analyze_code
+from SRC.extract_feedback_annd_marks import extract_feedback_and_marks
 
 logger = logging.getLogger()
 
@@ -8,6 +9,46 @@ logger = logging.getLogger()
 QUESTION_PATH = "./ASSIGN_VAR/question.txt"
 EVALUATION_PATH = "./ASSIGN_VAR/evaluation.txt"
 DOWNLOAD_DIRECTORY = "PDS_SEC_2"
+
+def update_grade_and_feedback(page, roll_number, grade, feedback):
+    page.locator("input#id_grade").fill(grade)
+    logger.info(f"Graded Student {roll_number}: {grade}")
+    # Extract feedback comment
+    # Target the TinyMCE iframe
+    editor_iframe = page.frame_locator("iframe#id_assignfeedbackcomments_editor_ifr")
+
+    # Clear existing content by pressing Ctrl+A and Backspace, then type
+    editor_body = editor_iframe.locator("body#tinymce")
+
+    editor_body.click()  # focus the editor
+    editor_body.press("Control+A")
+    editor_body.press("Backspace")
+    editor_body.type(f"{feedback}")
+    editor_text = editor_body.inner_text().strip()
+    if editor_text:
+        # Click save
+        save_button = page.locator("form[data-region='grading-actions-form'] button[name='savechanges']")
+
+        with page.expect_response(lambda response: "mod_assign_submit_grading_form" in response.url) as resp_info:
+            save_button.click()
+
+        response = resp_info.value
+        logger.info(f"Save request completed with status {response.status}")
+    else:
+        logger.warning("Editor body empty, skipping 'Save changes'.")
+
+    logger.info("Feedback text updated successfully inside TinyMCE editor.")
+
+    # Wait for 5 seconds before going back
+    page.wait_for_timeout(2000)  # 2000 ms = 2 seconds
+
+    # Go back to the previous page (submissions table)
+    page.go_back()
+    page.go_back()
+
+    # Wait for table to reappear
+    page.wait_for_selector("table.generaltable")
+    logger.info("Returned to submissions table.")
 
 def process_page(page):
     """Process all rows of the current page"""
@@ -24,7 +65,7 @@ def process_page(page):
             roll_number = username_cell.inner_text(timeout=2000).strip()
             if not roll_number:
                 continue
-
+            logger.info("----------------------------------------")
             logger.info(f"Processing student: {roll_number}")
 
             submission_cell = row.locator("td.c10")
@@ -34,6 +75,14 @@ def process_page(page):
             file_links = submission_cell.locator("a").all()
             if not file_links:
                 logger.warning(f"No submission links found for {roll_number}")
+                # Click grade button to open grade page
+                row.locator("a.btn.btn-primary", has_text="Grade").click()
+
+                # Wait until grade panel loads
+                page.wait_for_selector("div[data-region='grade-panel']")
+
+                update_grade_and_feedback(page, roll_number, "0", "No submission found.")
+
                 continue
 
             for link in file_links:
@@ -50,8 +99,11 @@ def process_page(page):
                     download.save_as(save_path)
                     logger.info(f"Downloaded: {os.path.basename(save_path)}")
                     # Analyze the code and save comments
-                    # analyze_code(QUESTION_PATH, EVALUATION_PATH, save_path, student_folder)
-                    # logger.info(f"Analyzed code for {roll_number} and saved comments.")
+                    analyze_code(QUESTION_PATH, EVALUATION_PATH, save_path, student_folder)
+                    logger.info(f"Analyzed code for {roll_number} and saved comments.")
+                    grade, feedback = extract_feedback_and_marks(student_folder)
+                    logger.info(f"Feedback - {feedback}\nGrade - {grade}")
+                    # update_grade_and_feedback(page, roll_number, grade, feedback)
 
         except Exception as e:
             logger.error(f"Error processing row {i+1}: {e}")

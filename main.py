@@ -6,7 +6,7 @@ import pytesseract
 from PIL import Image
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright, expect
-from SRC.download_and_process_page import download_all_pages
+from SRC.download_and_process_page import process_page
 
 load_dotenv()
 
@@ -19,12 +19,10 @@ logging.basicConfig(
     ]
 )
 
-# --- Submission URLs Configuration ---
 # Add all the submission URLs you want to process:
-# Each URL can be from different quizzes, pages, or filters
-# If there are multiple pages, you can add more URLs with different page numbers
 SUBMISSION_URLS = [
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1493&action=grading",
+    # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1493&action=grading",
+    "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1491&action=grading",
     # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1530&action=grading",
 ]
 
@@ -67,7 +65,7 @@ def run(playwright):
 
     # --- 1. Login ---
     page.goto(os.getenv("MOODLE_URL"))
-    page.get_by_label("Username").fill(os.getenv("USERNAME"))
+    page.get_by_label("Username").fill(os.getenv("MODULENAME"))
     page.get_by_label("Password").fill(os.getenv("PASSWORD"))
 
     # --- The CAPTCHA Challenge ---
@@ -103,7 +101,7 @@ def run(playwright):
                     print("Retrying...")
                     # Go back to login page for retry
                     page.goto(os.getenv("MOODLE_URL"))
-                    page.get_by_label("Username").fill(os.getenv("USERNAME"))
+                    page.get_by_label("Username").fill(os.getenv("MODULENAME"))
                     page.get_by_label("Password").fill(os.getenv("PASSWORD"))
                     time.sleep(1)  # Brief pause before retry
         else:
@@ -112,13 +110,15 @@ def run(playwright):
                 print("Retrying...")
                 # Refresh the page to get a new CAPTCHA
                 page.reload()
-                page.get_by_label("Username").fill(os.getenv("USERNAME"))
+                page.get_by_label("Username").fill(os.getenv("MODULENAME"))
                 page.get_by_label("Password").fill(os.getenv("PASSWORD"))
                 time.sleep(1)  # Brief pause before retry
 
     # If all OCR attempts failed, fall back to manual solving
     if not login_successful:
         print("All OCR attempts failed. Please solve CAPTCHA manually.")
+        page.get_by_label("Username").fill(os.getenv("MODULENAME"))
+        page.get_by_label("Password").fill(os.getenv("PASSWORD"))
         page.wait_for_url("**/moodle/", timeout=300000)
         print("Login successful!")
 
@@ -145,7 +145,8 @@ def run(playwright):
             print(f"Error navigating to URL {url_index}: {e}")
             continue
 
-        download_all_pages(page)
+        # download_all_pages(page)
+        process_page(page)
 
     print(f"\n--- Automation Complete ---")
     print(f"Total students processed: {total_students_processed}")

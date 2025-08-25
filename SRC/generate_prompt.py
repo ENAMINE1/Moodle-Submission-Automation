@@ -9,7 +9,6 @@ def analyze_code(question_file, evlaution_file, code_file, save_path):
 
     code = generate_prompt(question_file, evlaution_file, code_file)
     api_key=os.getenv("GEMINI_API_KEY")
-    print(api_key)
     model_id = "gemini-2.0-flash"  # or gemini-2.5-pro, depending on your setup
 
     endpoint = f"https://generativelanguage.googleapis.com/v1/models/{model_id}:generateContent?key={api_key}"
@@ -31,20 +30,21 @@ def analyze_code(question_file, evlaution_file, code_file, save_path):
                         "2) Response must have exactly two sections:\n"
                         "Comments:\nMarks:\n"
                         "3) Limit response length to 50–60 words. "
-                        "4) In Comments: only show <wrong_code_snippet>\s*→\s*<what is wrong>\s*→\s*<what should have been done>\n\n"
+                        "4) In Comments: only show <wrong_code_snippet> → <what is wrong> → <what should have been done>\n\n"
                         "5) Do not explain anything else, do not add extra lines. "
                         "6) Marks must follow this structure in Marking Criteria\n"
                         "7) Dont forget to give marks for each criteria\n"
+                        "8) Add another line for Total Marks where you dont write any other text than the total marks\n\n"
                         f"Question: {code["question"]}\n\n"
                         f"Evaluation Criteria: {code["evaluation_criteria"]["criteria"]}\n\n"
                         "Code:\n"
                         f"{code["code"]}\n\n"
                         "Marking Criteria:\n"
-                        f"- Logical Sanity: {code["evaluation_criteria"]["logical_marks"]}\n"
-                        f"- Correct Indentation: {code["evaluation_criteria"]["indentation_marks"]}\n"
-                        f"- Comments in the code: {code["evaluation_criteria"]["comments_marks"]}\n"
-                        f"- Output correctness: {code["evaluation_criteria"]["output_marks"]}"
-                        f"- Total Marks: {code["evaluation_criteria"]["total_marks"]}\n"
+                        f"Logical Sanity: {code["evaluation_criteria"]["logical_marks"]}\n"
+                        f"Correct Indentation: {code["evaluation_criteria"]["indentation_marks"]}\n"
+                        f"Comments in the code: {code["evaluation_criteria"]["comments_marks"]}\n"
+                        f"Output correctness: {code["evaluation_criteria"]["output_marks"]}"
+                        f"Total Marks: {code["evaluation_criteria"]["total_marks"]}\n"
                     )
                 }
             ]
