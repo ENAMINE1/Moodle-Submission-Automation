@@ -1,15 +1,18 @@
 import os
 import re
 import requests
+import logging
 from dotenv import load_dotenv
+
+logger = logging.getLogger()
 
 load_dotenv()
 
 def analyze_code(question_file, evlaution_file, code_file, save_path):
-
-    code = generate_prompt(question_file, evlaution_file, code_file)
+    prompt = generate_prompt(question_file, evlaution_file, code_file)
     api_key=os.getenv("GEMINI_API_KEY")
-    model_id = "gemini-2.0-flash"  # or gemini-2.5-pro, depending on your setup
+    model_id = "gemini-2.5-flash"  # or gemini-2.5-pro, depending on your setup
+    logger.info(f"Using model: {model_id}")
 
     endpoint = f"https://generativelanguage.googleapis.com/v1/models/{model_id}:generateContent?key={api_key}"
 
@@ -30,33 +33,34 @@ def analyze_code(question_file, evlaution_file, code_file, save_path):
                         "2) Response must have exactly two sections:\n"
                         "Comments:\nMarks:\n"
                         "3) Limit response length to 50–60 words. "
-                        "4) In Comments: only show <wrong_code_snippet> → <what is wrong> → <what should have been done>\n\n"
+                        "4) In Comments: only show the wrong code block followed by what is wrong in it and what should have been done\n\n"
                         "5) Do not explain anything else, do not add extra lines. "
                         "6) Marks must follow this structure in Marking Criteria\n"
                         "7) Dont forget to give marks for each criteria\n"
-                        "8) Add another line for Total Marks where you dont write any other text than the total marks\n\n"
-                        f"Question: {code["question"]}\n\n"
-                        f"Evaluation Criteria: {code["evaluation_criteria"]["criteria"]}\n\n"
+                        "8) Give no marks if no logic is written in the code.\n"
+                        f"Question: {prompt["question"]}\n\n"
+                        f"Evaluation Criteria: {prompt["evaluation_criteria"]["criteria"]}\n\n"
                         "Code:\n"
-                        f"{code["code"]}\n\n"
+                        f"{prompt["code"]}\n\n"
                         "Marking Criteria:\n"
-                        f"Logical Sanity: {code["evaluation_criteria"]["logical_marks"]}\n"
-                        f"Correct Indentation: {code["evaluation_criteria"]["indentation_marks"]}\n"
-                        f"Comments in the code: {code["evaluation_criteria"]["comments_marks"]}\n"
-                        f"Output correctness: {code["evaluation_criteria"]["output_marks"]}"
-                        f"Total Marks: {code["evaluation_criteria"]["total_marks"]}\n"
+                        f"Logical Sanity: {prompt["evaluation_criteria"]["logical_marks"]}\n"
+                        f"Correct Indentation: {prompt["evaluation_criteria"]["indentation_marks"]}\n"
+                        f"Comments in the code: {prompt["evaluation_criteria"]["comments_marks"]}\n"
+                        f"Output correctness: {prompt["evaluation_criteria"]["output_marks"]}"
+                        f"Total Marks: {prompt["evaluation_criteria"]["total_marks"]}\n"
                     )
                 }
             ]
         }
         ],
         "generationConfig": {
-            "maxOutputTokens": 150,
+            "maxOutputTokens": 200,
             "temperature": 0.2
         }
     }
     response = requests.post(endpoint, headers=headers, json=data)
     resp_json = response.json()
+    logger.warning(f"Response: {resp_json}")
     if "candidates" in resp_json:
         output_text = resp_json["candidates"][0]["content"]["parts"][0]["text"]
         with open (os.path.join(save_path, "comments.txt"), 'w') as f:

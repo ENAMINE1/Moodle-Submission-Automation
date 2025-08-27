@@ -2,8 +2,25 @@ import os
 import logging
 from SRC.generate_prompt import analyze_code
 from SRC.extract_feedback_annd_marks import extract_feedback_and_marks
+import google.generativeai as genai
 
 logger = logging.getLogger()
+
+OFFSET_FILE = "student.txt"
+
+pages_processed = 0
+# Read last offset
+if os.path.exists(OFFSET_FILE):
+    with open(OFFSET_FILE, "r") as f:
+        content = f.read().strip()
+        if content:   # only convert if not empty
+            pages_processed = int(content)
+        else:
+            pages_processed = 0   # default if file is empty
+PAGE_LIMIT = 1
+# models = genai.list_models()
+# for m in models:
+#     print(m.name, "=>", m.supported_generation_methods)
 
 
 QUESTION_PATH = "./ASSIGN_VAR/question.txt"
@@ -25,6 +42,15 @@ def update_grade_and_feedback(page, roll_number, grade, feedback):
     editor_body.press("Backspace")
     editor_body.type(f"{feedback}")
     editor_text = editor_body.inner_text().strip()
+
+    # Locate the checkbox
+    checkbox = page.locator("input[type='checkbox'][name='sendstudentnotifications']")
+
+    # Make sure it is unchecked
+    # checkbox.check()
+    checkbox.uncheck()
+    page.wait_for_timeout(2000)  # 2000 ms = 2 seconds
+
     if editor_text:
         # Click save
         save_button = page.locator("form[data-region='grading-actions-form'] button[name='savechanges']")
@@ -50,11 +76,15 @@ def update_grade_and_feedback(page, roll_number, grade, feedback):
     page.wait_for_selector("table.generaltable")
     logger.info("Returned to submissions table.")
 
-def process_page(page):
+def process_page(page, page_num):
     """Process all rows of the current page"""
+    global student, cnt
+    global OFFSET_FILE
+    global QUESTION_PATH, EVALUATION_PATH, DOWNLOAD_DIRECTORY
+    global logger
     rows = page.locator("table.generaltable tbody tr")
     row_count = rows.count()
-
+    print(f"Rows found: {row_count} on page {page_num}")
     for i in range(row_count):
         row = rows.nth(i)
         try:
@@ -65,8 +95,8 @@ def process_page(page):
             roll_number = username_cell.inner_text(timeout=2000).strip()
             if not roll_number:
                 continue
-            logger.info("----------------------------------------")
-            logger.info(f"Processing student: {roll_number}")
+            logger.info("----------------------------------------------------------------------------------------")
+            logger.info(f"Processing student: {roll_number} in {page_num + 1}")
 
             submission_cell = row.locator("td.c10")
             if submission_cell.count() == 0:
@@ -103,17 +133,26 @@ def process_page(page):
                     logger.info(f"Analyzed code for {roll_number} and saved comments.")
                     grade, feedback = extract_feedback_and_marks(student_folder)
                     logger.info(f"Feedback - {feedback}\nGrade - {grade}")
-                    # update_grade_and_feedback(page, roll_number, grade, feedback)
+                    row.locator("a.btn.btn-primary", has_text="Grade").click()
+                    # Wait until grade panel loads
+                    page.wait_for_selector("div[data-region='grade-panel']")
+                    update_grade_and_feedback(page, roll_number, grade, feedback)
 
         except Exception as e:
             logger.error(f"Error processing row {i+1}: {e}")
 
 
 def download_all_pages(page):
+    global pages_processed, page_cnt
+    model_ids = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-pro"]
     page_num = 1
     while True:
-        logger.info(f"Processing page {page_num}...")
-        process_page(page)
+        logger.info(f"Processing page {pages_processed + 1}...")
+        if(page_num > pages_processed):
+            if((page_num - pages_processed) <= PAGE_LIMIT):
+                process_page(page, pages_processed)
+            else:
+                break
 
         # Locate next page button (take first match to avoid strict mode error)
         next_page = page.locator("nav.pagination a:has-text('»')").first
@@ -122,8 +161,11 @@ def download_all_pages(page):
             logger.info("No more pages to process. Scraping finished.")
             break
 
-        logger.info(f"Moving to next page {page_num + 1}...")
+        logger.info(f"Moving to next page {pages_processed + 1}...")
         next_page.click()
         page.wait_for_load_state("load")
-
         page_num += 1
+
+    # Save current offset
+    with open(OFFSET_FILE, "w") as f:
+        f.write(str(page_num - 1))

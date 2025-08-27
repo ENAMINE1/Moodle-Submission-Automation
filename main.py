@@ -6,23 +6,26 @@ import pytesseract
 from PIL import Image
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright, expect
-from SRC.download_and_process_page import process_page
+from SRC.download_and_process_page import download_all_pages, process_page
 
 load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] %(levelname)s: %(message)s",
+    format="[%(asctime)s] %(levelname)s: %(message)s (Line %(lineno)d in %(filename)s)",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
         logging.FileHandler("submissions.log", encoding="utf-8"),
     ]
 )
 
+logger = logging.getLogger()
+
 # Add all the submission URLs you want to process:
 SUBMISSION_URLS = [
+    "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1535&action=grading",
     # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1493&action=grading",
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1491&action=grading",
+    # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1491&action=grading",
     # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1530&action=grading",
 ]
 
@@ -131,6 +134,7 @@ def run(playwright):
 
     total_students_processed = 0
 
+    logger.info(f"\n\n+++++++++++++++++++++Starting processing of submission URLs.+++++++++++++++++++++++++\n")
     # Process each submission URL
     for url_index, submission_url in enumerate(SUBMISSION_URLS, 1):
         print(
@@ -145,8 +149,8 @@ def run(playwright):
             print(f"Error navigating to URL {url_index}: {e}")
             continue
 
-        # download_all_pages(page)
-        process_page(page)
+        download_all_pages(page)
+        # process_page(page, 1)
 
     print(f"\n--- Automation Complete ---")
     print(f"Total students processed: {total_students_processed}")
