@@ -11,7 +11,7 @@ load_dotenv()
 def analyze_code(question_file, evlaution_file, code_file, save_path):
     prompt = generate_prompt(question_file, evlaution_file, code_file)
     api_key=os.getenv("GEMINI_API_KEY")
-    model_id = "gemini-2.5-flash"  # or gemini-2.5-pro, depending on your setup
+    model_id = "gemini-2.0-flash"  # or gemini-2.5-pro, depending on your setup
     logger.info(f"Using model: {model_id}")
 
     endpoint = f"https://generativelanguage.googleapis.com/v1/models/{model_id}:generateContent?key={api_key}"
@@ -27,17 +27,18 @@ def analyze_code(question_file, evlaution_file, code_file, save_path):
             "parts": [
                 {
                     "text": (
-                        "You are a liberal programming examiner. But be little strict for indentation and comments "
+                        "You are a liberal programming examiner and give good marks (more than 95%) if you find the code in correct direction."
                         "Rules: "
                         "1) Output plain text only (no markdown, no code fences). "
                         "2) Response must have exactly two sections:\n"
                         "Comments:\nMarks:\n"
                         "3) Limit response length to 50–60 words. "
-                        "4) In Comments: only show the wrong code block followed by what is wrong in it and what should have been done\n\n"
+                        "4) In Comments: if necessary only show the wrong code block followed by what is wrong in it and what should have been done, also\n\n"
                         "5) Do not explain anything else, do not add extra lines. "
                         "6) Marks must follow this structure in Marking Criteria\n"
                         "7) Dont forget to give marks for each criteria\n"
-                        "8) Give no marks if no logic is written in the code.\n"
+                        "8) Give extra marks than expected but less than total marks.\n"
+                        "9) Point out maximum 3 mistakes."
                         f"Question: {prompt["question"]}\n\n"
                         f"Evaluation Criteria: {prompt["evaluation_criteria"]["criteria"]}\n\n"
                         "Code:\n"
@@ -94,7 +95,7 @@ def generate_prompt(question_file, evlaution_file, code_file):
         "logical_marks": marks_dict.get("Logic_syntax", 0),
         "indentation_marks": marks_dict.get("Indentation", 0),
         "comments_marks": marks_dict.get("Comment", 0),
-        "output_marks": marks_dict.get("Compilation_I/O", 0),
+        "output_marks": marks_dict.get("Output_Correctness", 0),
         "total_marks": marks_dict.get("Total", 0)
     }
 

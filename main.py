@@ -7,6 +7,7 @@ from PIL import Image
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright, expect
 from SRC.download_and_process_page import download_all_pages, process_page
+from SRC.generate_prompt import analyze_code
 
 load_dotenv()
 
@@ -23,7 +24,7 @@ logger = logging.getLogger()
 
 # Add all the submission URLs you want to process:
 SUBMISSION_URLS = [
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1535&action=grading",
+    "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?action=grading&id=1595&page=0",
     # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1493&action=grading",
     # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1491&action=grading",
     # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1530&action=grading",
@@ -162,3 +163,11 @@ def run(playwright):
 
 with sync_playwright() as playwright:
     run(playwright)
+
+# from SRC.generate_prompt import analyze_code
+
+# QUESTION_PATH = "ASSIGN_VAR/question.txt"
+# EVALUATION_PATH = "ASSIGN_VAR/evaluation.txt"
+# CODE_PATH = "ASSIGN_VAR/code.c"
+# SAVE_PATH = "ASSIGN_VAR"
+# analyze_code(   QUESTION_PATH, EVALUATION_PATH, CODE_PATH, SAVE_PATH)

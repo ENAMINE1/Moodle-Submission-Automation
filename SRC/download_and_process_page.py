@@ -7,6 +7,7 @@ import google.generativeai as genai
 logger = logging.getLogger()
 
 OFFSET_FILE = "student.txt"
+PAGE_LIMIT = 5
 
 pages_processed = 0
 # Read last offset
@@ -17,7 +18,6 @@ if os.path.exists(OFFSET_FILE):
             pages_processed = int(content)
         else:
             pages_processed = 0   # default if file is empty
-PAGE_LIMIT = 1
 # models = genai.list_models()
 # for m in models:
 #     print(m.name, "=>", m.supported_generation_methods)
@@ -49,7 +49,7 @@ def update_grade_and_feedback(page, roll_number, grade, feedback):
     # Make sure it is unchecked
     # checkbox.check()
     checkbox.uncheck()
-    page.wait_for_timeout(2000)  # 2000 ms = 2 seconds
+    # page.wait_for_timeout(2000)  # 2000 ms = 2 seconds
 
     if editor_text:
         # Click save
@@ -66,14 +66,19 @@ def update_grade_and_feedback(page, roll_number, grade, feedback):
     logger.info("Feedback text updated successfully inside TinyMCE editor.")
 
     # Wait for 5 seconds before going back
-    page.wait_for_timeout(2000)  # 2000 ms = 2 seconds
+    # page.wait_for_timeout(2000)  # 2000 ms = 2 seconds
 
     # Go back to the previous page (submissions table)
     page.go_back()
-    page.go_back()
+    if("page=" in page.url):
+        logger.info(f"Returned to submissions page: {page.url}")
+    else:
+        page.go_back()
+        logger.warning(f"Returned to submissions page: {page.url}")
 
     # Wait for table to reappear
     page.wait_for_selector("table.generaltable")
+    # page.wait_for_timeout(5000)  # 2000 ms = 2 seconds
     logger.info("Returned to submissions table.")
 
 def process_page(page, page_num):
@@ -96,7 +101,7 @@ def process_page(page, page_num):
             if not roll_number:
                 continue
             logger.info("----------------------------------------------------------------------------------------")
-            logger.info(f"Processing student: {roll_number} in {page_num + 1}")
+            logger.info(f"Processing student: {roll_number} in {page_num}")
 
             submission_cell = row.locator("td.c10")
             if submission_cell.count() == 0:
@@ -110,9 +115,7 @@ def process_page(page, page_num):
 
                 # Wait until grade panel loads
                 page.wait_for_selector("div[data-region='grade-panel']")
-
                 update_grade_and_feedback(page, roll_number, "0", "No submission found.")
-
                 continue
 
             for link in file_links:
@@ -138,33 +141,38 @@ def process_page(page, page_num):
                     page.wait_for_selector("div[data-region='grade-panel']")
                     update_grade_and_feedback(page, roll_number, grade, feedback)
 
+
         except Exception as e:
             logger.error(f"Error processing row {i+1}: {e}")
 
 
 def download_all_pages(page):
-    global pages_processed, page_cnt
+    global pages_processed
     model_ids = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-pro"]
-    page_num = 1
+
     while True:
-        logger.info(f"Processing page {pages_processed + 1}...")
-        if(page_num > pages_processed):
-            if((page_num - pages_processed) <= PAGE_LIMIT):
-                process_page(page, pages_processed)
+        # Read current page number from the active <li>
+        active_page = page.locator("li.page-item.active[data-page-number]").first
+        page_num = int(active_page.get_attribute("data-page-number"))
+
+        logger.info(f"Processing page {page_num}...")
+
+        if page_num > pages_processed:
+            if (page_num - pages_processed) <= PAGE_LIMIT:
+                process_page(page, page_num)
             else:
                 break
 
-        # Locate next page button (take first match to avoid strict mode error)
+        # Locate next page button (»)
         next_page = page.locator("nav.pagination a:has-text('»')").first
 
         if not next_page.is_visible() or not next_page.is_enabled():
             logger.info("No more pages to process. Scraping finished.")
             break
 
-        logger.info(f"Moving to next page {pages_processed + 1}...")
+        logger.info(f"Moving to next page {page_num + 1}...")
         next_page.click()
         page.wait_for_load_state("load")
-        page_num += 1
 
     # Save current offset
     with open(OFFSET_FILE, "w") as f:
