@@ -27,7 +27,7 @@ def analyze_code(question_file, evlaution_file, code_file, save_path):
             "parts": [
                 {
                     "text": (
-                        "You are a liberal programming examiner and give good marks (more than 95%) if you find the code in correct direction."
+                        "You are a liberal programming examiner and give good marks (more than 95%) if you find the code in correct direction and dont penalise too much for wrong answer keep the score above 70% of total marks."
                         "Rules: "
                         "1) Output plain text only (no markdown, no code fences). "
                         "2) Response must have exactly two sections:\n"

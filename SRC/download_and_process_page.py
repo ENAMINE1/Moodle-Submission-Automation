@@ -7,7 +7,7 @@ import google.generativeai as genai
 logger = logging.getLogger()
 
 OFFSET_FILE = "student.txt"
-PAGE_LIMIT = 5
+PAGE_LIMIT = 1
 
 pages_processed = 0
 # Read last offset
