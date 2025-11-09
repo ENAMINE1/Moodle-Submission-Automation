@@ -1,7 +1,0 @@
-Write a C program that reads N and then N double values into an array. Partition the array in place so that numbers with fractional part less than 0.5 come first and numbers with fractional part greater than or equal to 0.5 come after. Use a swap function implemented with pointers and do not use any additional arrays. After partitioning, sort the front part (fractional part < 0.5) in ascending order and the back part (fractional part ≥ 0.5) in descending order. Display the initial array, the intermediate array after partitioning, and the final array after sorting both parts.
-
-Example:
-Input: 3.49 -2.51 7.50 4.12 5.99 8.00 1.25 -1.75 6.48 2.50
-Initial: [3.49, -2.51, 7.50, 4.12, 5.99, 8.00, 1.25, -1.75, 6.48, 2.50]
-Intermediate: [3.49, 4.12, 8.00, 1.25, -1.75, 6.48, -2.51, 7.50, 5.99, 2.50]
-Final: [-1.75, 1.25, 3.49, 4.12, 8.00, 7.50, 6.48, 5.99, 2.50, -2.51]

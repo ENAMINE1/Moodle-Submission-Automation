@@ -27,7 +27,7 @@ def analyze_code(question_file, evlaution_file, code_file, save_path):
             "parts": [
                 {
                     "text": (
-                        f"You are a liberal programming examiner and give marks above {0.75 * int(prompt["evaluation_criteria"]["total_marks"])} if you find the code in correct direction and penalise for wrong answer."
+                        f"You are a liberal programming examiner and give marks in the range {0.75 * int(prompt["evaluation_criteria"]["total_marks"])} to {0.95 * int(prompt["evaluation_criteria"]["total_marks"])} if you find the code in correct direction and penalise for wrong answer."
                         "Rules: "
                         "1) Output plain text only (no markdown, no code fences). "
                         "2) Response must have exactly two sections:\n"
@@ -86,7 +86,7 @@ def generate_prompt(question_file, evlaution_file, code_file):
                 break
             if "=" in line:
                 key, value = line.split("=")
-                marks_dict[key.strip()] = int(value.strip())
+                marks_dict[key.strip()] = float(value.strip())
         with open(code_file, 'r') as f:
             code = f.read().strip()
 

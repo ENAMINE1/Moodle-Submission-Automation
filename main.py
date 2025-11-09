@@ -24,14 +24,10 @@ logger = logging.getLogger()
 
 # Add all the submission URLs you want to process:
 SUBMISSION_URLS = [
-    # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?action=grading&id=1944&page=0",
-    "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?action=grading&id=1944&page=0",
-    # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1493&action=grading",
-    # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1491&action=grading",
-    # "https://moodlecse.iitkgp.ac.in/moodle/mod/assign/view.php?id=1530&action=grading",
+    
 ]
 
-DOWNLOAD_DIRECTORY = "PDS_SEC_2"
+DOWNLOAD_DIRECTORY = "DOWNLOADS"
 
 if not os.path.exists(DOWNLOAD_DIRECTORY):
     os.makedirs(DOWNLOAD_DIRECTORY)

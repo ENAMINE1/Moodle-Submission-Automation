@@ -83,7 +83,7 @@ Edit the configuration section in `main.py`:
 
 ```python
 # --- Configuration ---
-USERNAME = "your_username"
+MODULENAME = "your_username"
 PASSWORD = "your_password"
 DOWNLOAD_DIRECTORY = "Assignments"  # This will be your download folder
 ```
