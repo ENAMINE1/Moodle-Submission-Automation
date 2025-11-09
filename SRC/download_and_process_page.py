@@ -7,7 +7,7 @@ import google.generativeai as genai
 logger = logging.getLogger()
 
 OFFSET_FILE = "student.txt"
-PAGE_LIMIT = 1
+PAGE_LIMIT = 10
 
 pages_processed = 0
 # Read last offset
@@ -36,11 +36,8 @@ def update_grade_and_feedback(page, roll_number, grade, feedback):
 
     # Clear existing content by pressing Ctrl+A and Backspace, then type
     editor_body = editor_iframe.locator("body#tinymce")
-
-    editor_body.click()  # focus the editor
-    editor_body.press("Control+A")
-    editor_body.press("Backspace")
-    editor_body.type(f"{feedback}")
+    logger.info(editor_body.inner_text())
+    editor_body.fill(f"{feedback}")
     editor_text = editor_body.inner_text().strip()
 
     # Locate the checkbox

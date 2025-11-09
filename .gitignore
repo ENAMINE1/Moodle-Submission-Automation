@@ -77,7 +77,7 @@ downloads/
 *.zip
 *.doc
 *.docx
-*.txt
+# *.txt
 
 # Logs
 *.log

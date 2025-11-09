@@ -1,0 +1,10 @@
+Marks distribution:
+Comment=2
+Indentation=3
+Compilation_and_I/O=9
+Logic_syntax=16
+Total = 30
+
+Do not check for code optimization. Redundant logic, extra variables any kind of loops, if/else, or switch cases are acceptable.
+If code is large, confusing, or non-functional, do not examine line by line Instead, check at an abstract level (inputs, key comparisons, logic)If approach is somewhat correct, award partial marks using discretion.
+the intermediate arrays are just an example. The actual intermediate array can be different from what is given in the example based on the logic implemented. But the final array should be the same.
